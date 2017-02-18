@@ -24,7 +24,7 @@ let tooltip = d3.select("body")
     .text("no data");
 
 let meteorDataUrl = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/meteorite-strike-data.json';
-let topojsonWorldMapUrl = "http://res.cloudinary.com/dtau8d3ak/raw/upload/v1487235741/topocountries_p1vtv8.json";
+let topojsonWorldMapUrl = "https://res.cloudinary.com/dtau8d3ak/raw/upload/v1487235741/topocountries_p1vtv8.json";
 
 let transform = {k: 1, x: 0, y: 0};
 
