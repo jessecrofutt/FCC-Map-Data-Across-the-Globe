@@ -1,8 +1,5 @@
 This is a project for FreeCodeCamp
 
-FreeCodeCamp
-
-
 ### To run
 Create a webpack build with this command:
 
@@ -12,8 +9,6 @@ Create a webpack build with this command:
 To run the webpack-dev-server enter this command:
 
 > $ npm run start
-
-
 
 Page is served at:
 http://localhost:8888
