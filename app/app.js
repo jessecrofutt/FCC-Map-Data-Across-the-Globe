@@ -1,25 +1,19 @@
-var d3 = require('d3');
+import * as d3 from 'd3';
+import * as topojson from 'topojson';
+
 import _ from 'lodash';
 import './style/style.sass';
 
-let url = 'https://raw.githubusercontent.com/DealPete/forceDirected/master/countries.json';
-
-let svgWidth = 900;
-let svgHeight = 500;
-
-let margin = {top: 20, right: 20, bottom: 20, left: 20},
-    width = svgWidth - margin.left - margin.right,
-    height = svgHeight - margin.top - margin.bottom;
-
-        //canvas is the base on which svg(lines) and div(nodes) are placed
-let canvas = d3.select('#app').append('div')
-        .attr('id', 'canvas');
-
-        //svg
-let svg = canvas.append("svg")
-    .attr("id", "svg")
-    .attr("width", svgWidth)
-    .attr("height", svgHeight)
+        //page title
+d3.select("body")
+    .append("div")
+    .append('text')
+    .attr("class", "tooltip")
+    .attr("position", "center")
+    .style("visibility", "visible")
+    .style("z-index", "10")
+    .attr('id', 'title')
+    .text('Meteorite Strikes Around the World');
 
 let tooltip = d3.select("body")
     .append("div")
@@ -29,96 +23,125 @@ let tooltip = d3.select("body")
     .style("visibility", "hidden")
     .text("no data");
 
-        //page title
-svg.append('text')
-    .attr("position", "center")
-    .attr("y", "30")
-    .attr("x", "10")
-    .attr('id', 'title')
-    .text('Force-Directed Graph of National Contiguity');
+let meteorDataUrl = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/meteorite-strike-data.json';
+let topojsonWorldMapUrl = "http://res.cloudinary.com/dtau8d3ak/raw/upload/v1487235741/topocountries_p1vtv8.json";
 
-d3.json(url, (jsonData) => {
+let transform = {k: 1, x: 0, y: 0};
 
-    let nodes = jsonData.nodes;
-    let links = jsonData.links;
+let width = 800,
+    height = 500;
 
-            //link is an svg that will hold all of the lines
-            //lines are svg elements
-    let link = svg.append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(links)
-        .enter().append("line")
-            .attr("stroke", "#4D4D4D")
-            .attr("stroke-width", "1");
+let projection = d3.geoMercator()
+    .center([0, 5])
+    .scale(125)
+    //[yaw, pitch , roll]
+    .rotate([0, 0]);
 
-            //create nodes for flags
-            //creating each node as a div to which an image can be placed
-            //due to issues when placing images directly on the svg element
-    let node = canvas.append("div")
-        .attr("id", "flags")
-        .selectAll('img')
-        .data(nodes)
-        .enter().append('img')
-            .attr("class",(d) => `absolute flag flag-${d.code}`)
-            .on("mouseover", function(d){
-                d3.select(this);
-                tooltip.style("visibility", "visible")
-                    .style("font-size", "0.6em")
-                    .style("top", (d3.event.pageY + 10) + "px")
-                    .style("left", (d3.event.pageX) + "px")
-                    .html(d.country);
-            })
-            .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-            .on("mouseout", function(){
-                d3.select(this);
-                tooltip.style("visibility", "hidden");
-            })
-            .call(d3.drag()
-                .on("start", dragStart)
-                .on("drag", dragging)
-                .on("end", dragEnd))
-        ;
+let svg = d3.select("body").append("svg")
+    .attr("id", "svg")
+    .attr("width", width)
+    .attr("height", height);
 
-            //create a simulation
-    let simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).strength(2))
-        .force("charge", d3.forceManyBody().strength(-30).distanceMin(20).distanceMax(50))
-        .force("center", d3.forceCenter(svgWidth/3, svgHeight/2))  //divide by three to offset flattening in ticked()
-        .force('separate', d3.forceCollide(12))
-        .on("tick", ticked);
+let path = d3.geoPath()
+    .projection(projection);
 
+let g = svg.append("g");
 
-    function ticked() {
-        link
-                    //multiply by 1.5 to stretch the graph horizontally
-            .attr("x1", function(d) { return (d.source.x * 1.5); })
-            .attr("y1", function(d) { return d.source.y; })
-            .attr("x2", function(d) { return (d.target.x * 1.5); })
-            .attr("y2", function(d) { return d.target.y; });
+d3.json(topojsonWorldMapUrl, function(error, worldMap) {
 
-        node
-            .style("top", (d) => `${d.y - (svgHeight + 5)}px`)
-            .style("left", (d) => `${d.x * 1.5}px`);
+    d3.json(meteorDataUrl, function (error, meteorMap) {
 
-    }
+                //horizontal and vertical center
+        let hCenter = width/2;
+        let vCenter = height/2;
 
-    function dragStart(d) {
-        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-    }
+                //sort from largest to smallest and place on map in that order
+                //so smaller meteors are not buried and inaccessible beneath larger ones
+        let sortedMeteors = meteorMap.features.sort((a, b) => b.properties.mass - a.properties.mass);
 
-    function dragging(d) {
-        d.fx = d3.event.x;
-        d.fy = d3.event.y;
-    }
+                //scale size of meteor circles
+        var scale = d3.scalePow().exponent(0.5)
+            .domain(d3.extent(sortedMeteors, function (d) {
+                return d.properties.mass / Math.PI;
+            }))
+            .range([1, 20]);
 
-    function dragEnd(d) {
-        if (!d3.event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-    }
+                //draw map
+        g.selectAll("path")
+            .data(topojson.feature(worldMap, worldMap.objects.countries)
+                .features)
+            .enter()
+            .append("path")
+                .attr("class", "countries")
+                .attr("transform", "translate(-80, 0)")
+                .attr("fill", "green")
+                .attr("d", path);
+
+                //draw meteor strike circles
+        g.selectAll('circle')
+            .data(sortedMeteors)
+            .enter()
+            .append('circle')
+                .attr('cx', function (d) {
+                    return projection([+d.properties.reclong, +d.properties.reclat])[0];
+                })
+                .attr('cy', function (d) {
+                    return projection([+d.properties.reclong, +d.properties.reclat])[1];
+                })
+                .attr('r', function (d) {
+                    return scale(+d.properties.mass);
+                })
+                .attr("transform", "translate(-80, 0)")
+                .style("fill", function(d) {
+                    let maxMass = 110000;
+                    let mass = d.properties.mass;
+                    mass = mass > maxMass ? maxMass: mass;
+                    let green = 255 - Math.ceil(mass * 255/(maxMass + 0.01));
+                    let red = 255;
+                    let blue = 0;
+                    let opacity = 0.7;
+
+                    return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+                })
+                .attr('d', path.pointRadius(function (d) {
+                        return scale(d.properties.mass);
+                }))
+                .on("mouseover", function(d){
+                    let year = new Date(d.properties.year).getFullYear();
+                    let nameYear = d.properties.name + ' ,' + year;
+                    let mass = d.properties.mass + ' kg';
+                    let latitude = d.geometry.coordinates[1].toFixed(4);
+                    let longitude = d.geometry.coordinates[0].toFixed(4);
+                    d3.select(this).attr("class", "strikeSelected");
+                    tooltip.style("visibility", "visible")
+                        .style("top", (d3.event.pageY) + "px")
+                        .style("left", (d3.event.pageX) + "px")
+                        .html(`${year}<br/>
+                            Name: ${d.properties.name}<br/>
+                            Mass: ${d.properties.mass/1000} Tonnes (X1000kg)<br/>
+                            Lat: ${latitude}  Long: ${longitude}<br/>`);
+                })
+                    .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+                    .on("mouseout", function(){
+                        d3.select(this)
+                            .attr("class", function(d) {return d.Doped;});
+                        tooltip.style("visibility", "hidden");
+                    })
+    });
 });
 
+svg.call(
+    d3.zoom()
+        .on("zoom", function() {
+            g.attr("transform", d3.event.transform);
+            transform = d3.event.transform;
+
+                    //limit zoom out to default scale
+            if (transform.k < 1) {
+                transform.k = 1;
+                transform.x = 0;
+                transform.y = 0;
+            }
+        })
+)
 

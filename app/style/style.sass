@@ -1,5 +1,39 @@
-@import flags
 
+
+svg 
+  background: #eee
+path
+  stroke: white
+  stroke-width: 0.25px
+  fill: blue
+
+.sphere 
+  fill: #fff
+
+
+.land 
+  fill: #000
+
+
+.boundary 
+  fill: none
+  stroke: #fff
+  stroke-linejoin: round
+  stroke-linecap: round
+  vector-effect: non-scaling-stroke
+
+
+.overlay 
+  fill: none
+  pointer-events: all
+
+
+
+
+
+
+//@import flags
+//
 @font-face
   font-family: 'Actor'
   font-style: normal
@@ -16,14 +50,14 @@
   border-radius: $radius
 
 $IMFell: 'Actor', Helvetica, Arial, serif
-$dotColor: #29000b
-$dotSelected: #00ff05
 $charcoal: rgba(20,20,20,0.9  )
-$paleWhite: rgba(200,200,200,0.5)
+$paleWhite: rgba(200,200,200,0.7)
+$dotColor: #29000b
 
 body
-  background-color: #000000
   display: flex
+  flex-direction: column
+  background-color: #000000
   justify-content: center
   align-items: center
   width: 1200px
@@ -36,17 +70,9 @@ body
 #app
   justify-content: center
 
-#canvas
-  background-color: $charcoal
-  border: solid 1px black
-  +border-radius(3px)
-
-#flags
-  position: relative  //this is so child flags can use absolute positioning
-
 #svg
   font-family: $IMFell
-  background-color: $charcoal
+  background-color: #00043c
   color: $paleWhite
   display: flex
   top: auto
@@ -54,9 +80,18 @@ body
   border: solid 1px black
   +border-radius(3px)
 
+.countries
+  stroke: #170004
+  stroke-width: 0.25px
+  fill: green
+
+//
 #title
-  font-size: 1.5em
+  top: 0.5em
+  position: relative
+  font-size: 2em
   fill: #d4d4d4
+  color: #b2d2ca
 
 .absolute
   position: absolute
@@ -65,11 +100,18 @@ body
   display: flex
   align-content: center
 
+
+.strikeSelected
+
+  .strikeSelected:hover
+    fill: #a50001
+    stroke: black
+
 .tooltip
   font-family: $IMFell
   font-size: 16px
   padding: 5px
   color: $paleWhite
-  background-color: black
+  background-color: #000000
   border: solid 1px $dotColor
   +border-radius(3px)

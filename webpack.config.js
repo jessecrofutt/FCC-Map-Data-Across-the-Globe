@@ -35,9 +35,20 @@ module.exports = {
       {
         test: /\.(css|sass)$/,
         loaders: ["style-loader", "css-loader", "sass-loader"]
+      },
+      {
+        test: /\.json$/,
+        use: 'json-loader'
       }
 
+    ],
+    rules: [
+        {
+            test: /\.json$/,
+            use: 'json-loader'
+        }
     ]
+
   },
   devServer: {
     contentBase: "./build",
