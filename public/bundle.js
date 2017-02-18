@@ -72,12 +72,12 @@
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
 	//page title
-	d3.select("body").append("div").append('text').attr("class", "tooltip").attr("position", "center").style("visibility", "visible").style("z-index", "10").attr('id', 'title').text('Meteor Strikes Around the World');
+	d3.select("body").append("div").append('text').attr("class", "tooltip").attr("position", "center").style("visibility", "visible").style("z-index", "10").attr('id', 'title').text('Meteorite Strikes Around the World');
 	
 	var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("position", "absolute").style("z-index", "10").style("visibility", "hidden").text("no data");
 	
 	var meteorDataUrl = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/meteorite-strike-data.json';
-	var topojsonWorldMapUrl = "http://res.cloudinary.com/dtau8d3ak/raw/upload/v1487235741/topocountries_p1vtv8.json";
+	var topojsonWorldMapUrl = "https://res.cloudinary.com/dtau8d3ak/raw/upload/v1487235741/topocountries_p1vtv8.json";
 	
 	var transform = { k: 1, x: 0, y: 0 };
 	
